@@ -1,0 +1,1331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TradeClock PRO - Global Trading Dashboard</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React & React DOM -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <!-- Babel Standalone -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Inter Font -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #020617;
+        }
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        /* Hide scrollbars while keeping functionality */
+        .scrollbar-none::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-none {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen selection:bg-emerald-500 selection:text-slate-950">
+
+    <div id="root"></div>
+
+    <script type="text/babel">
+
+        // Helper for currency flags
+        const getCurrencyFlag = (curr) => {
+            switch (curr?.toUpperCase()) {
+                case 'USD': return '🇺🇸';
+                case 'EUR': return '🇪🇺';
+                case 'GBP': return '🇬🇧';
+                case 'JPY': return '🇯🇵';
+                case 'AUD': return '🇦🇺';
+                case 'CAD': return '🇨🇦';
+                case 'CHF': return '🇨🇭';
+                case 'NZD': return '🇳🇿';
+                case 'KRW': return '🇰🇷';
+                case 'MNT': return '🇲🇳';
+                default: return '🌐';
+            }
+        };
+
+        // Complete English & Mongolian Dictionary
+        const TRANSLATIONS = {
+            en: {
+                appTitle: "TradeClock PRO",
+                subtitle: "Global Sessions • Candle Timers • Economic Calendar",
+                weekday: "WEEKDAY",
+                weekend: "WEEKEND",
+                weekendAlertTitle: "MARKETS CLOSED FOR THE WEEKEND",
+                weekendAlertBody: "Traditional Forex, Stock, and Commodities exchanges are closed (Fri 22:00 UTC - Sun 21:00 UTC). Crypto markets remain active 24/7.",
+                tabAll: "All-in-One",
+                tabSessions: "Market Sessions",
+                tabCandles: "Candle Close",
+                tabDiscipline: "Discipline Timers",
+                tabNews: "Economic Calendar",
+                sessionsTitle: "Global Market Sessions & Lunch Break Tracker",
+                utcRef: "UTC Reference Clock",
+                overlapsTitle: "ACTIVE MARKET OVERLAPS & HIGH LIQUIDITY ZONES",
+                overlapsSubtitle: "Simultaneous open sessions produce highest trading volume and tightest spreads.",
+                candleTitle: "Multi-Timeframe Candle Close Countdown",
+                audioWarning: "Audio Warning Alert",
+                audioSubtitle: "Synthesizer sound beep 10s before candle close",
+                currentProgress: "Current Bar Progress",
+                disciplineTitle: "Trade Duration & Anti-Revenge Discipline Timers",
+                activeTrade: "Active Trade Stopwatch",
+                targetHolding: "Max Target Hold",
+                startTrade: "Start Trade",
+                stopTrade: "Close Trade",
+                cooloffTitle: "Post-Trade Mandatory Cooloff",
+                cooloffSubtitle: "Enforces emotional reset period after closing a position.",
+                startCooloff: "Start 15m Cooloff",
+                reset: "Reset",
+                cooloffActive: "COOLOFF ACTIVE - DO NOT ENTER NEW TRADES",
+                cooloffReady: "READY TO TRADE",
+                newsTitle: "Economic Calendar & Live News Countdown",
+                newsSubtitle: "High-impact releases display precise real-time countdowns",
+                searchNews: "Filter news releases...",
+                refreshNews: "AI Search Refresh",
+                addCustom: "+ Add Custom Release",
+                impact: "Impact",
+                actual: "Actual",
+                forecast: "Forecast",
+                previous: "Previous",
+                released: "RELEASED",
+                dangerTitle: "HIGH VOLATILITY DANGER ZONE",
+                dangerBody: "Major economic release in less than 30 minutes! High slippage risk.",
+                open: "OPEN",
+                closed: "CLOSED",
+                lunch: "LUNCH",
+                closesIn: "Closes In",
+                opensIn: "Opens In",
+                lunchEndsIn: "Lunch Ends In",
+                progress: "Progress",
+                noEvents: "No upcoming economic events match your filter.",
+                currency: "Currency",
+                category: "Category",
+                timeUtc: "Time (UTC)",
+                date: "Date",
+                eventName: "Event Name",
+                cancel: "Cancel",
+                saveEvent: "Save Event",
+                seoulName: "Seoul Session",
+                tokyoName: "Tokyo Session",
+                londonName: "London Session",
+                nyName: "New York Session",
+                sydneyName: "Sydney Session",
+                aiSearching: "Searching live economic feeds...",
+                aiSuccess: "Economic calendar updated via Gemini Search!",
+                audioOn: "Audio ON",
+                muted: "Muted"
+            },
+            mn: {
+                appTitle: "Трейдинг Цаг PRO",
+                subtitle: "Дэлхийн Бирж • Кандл Хаалт • Эдийн Засгийн Мэдээний Тоологч",
+                weekday: "АЖЛЫН ӨДӨР",
+                weekend: "АМРАЛТЫН ӨДӨР",
+                weekendAlertTitle: "АМРАЛТЫН ӨДРИЙН ЗАХ ЗЭЭЛИЙН ХААЛТ",
+                weekendAlertBody: "Гадаад валют (Forex), хувьцаа, түүхий эдийн биржүүд амралтын өдрүүдэд хаалттай. Крипто зах зээл 24/7 идэвхтэй байна.",
+                tabAll: "Бүгд Нэг Дор",
+                tabSessions: "Зах Зээлийн Сэшн",
+                tabCandles: "Кандлын Хаалт",
+                tabDiscipline: "Сахилга Батын Цаг",
+                tabNews: "Эдийн Засгийн Мэдээ",
+                sessionsTitle: "Дэлхийн Зах Зээлийн Сэшн ба Цайны Цагийн Тоологч",
+                utcRef: "UTC Цагийн Лавлах",
+                overlapsTitle: "ИДЭВХТЭЙ ЗАХ ЗЭЭЛИЙН ДАВХЦАЛ БА ӨНДӨР ХӨДӨЛГӨӨНТЭЙ ЗОН",
+                overlapsSubtitle: "Олон бирж нэгэн цагт нээлттэй байх нь арилжааны өндөр ачаалал, бага спред үүсгэдэг.",
+                candleTitle: "Хугацааны Графикийн Кандл Хаагдах Хугацаа",
+                audioWarning: "Дуун Анхааруулга",
+                audioSubtitle: "Кандл хаагдахаас 10 секундын өмнө сигналь өгнө",
+                currentProgress: "Одоогийн Кандлын Явц",
+                disciplineTitle: "Арилжааны Хугацаа ба Сэтгэл Зүйн Сахилга Батын Цаг",
+                activeTrade: "Идэвхтэй Арилжааны Стопвоч",
+                targetHolding: "Хамгийн Их Барих Хугацаа",
+                startTrade: "Арилжаа Эхлүүлэх",
+                stopTrade: "Арилжаа Дуусгах",
+                cooloffTitle: "Арилжааны Дараах Албадан Амралт",
+                cooloffSubtitle: "Арилжаа хаасны дараа сэтгэл хөдлөлөө дарах албадан амралт.",
+                startCooloff: "15 Минутын Амралт Эхлүүлэх",
+                reset: "Шинэчлэх",
+                cooloffActive: "АМРАЛТ ИДЭВХТЭЙ - ШИНЭ АРИЛЖАА РУУ БҮҮ ОР!",
+                cooloffReady: "АРИЛЖАА ХИЙХЭД БЭЛЭН",
+                newsTitle: "Эдийн Засгийн Мэдээ & Тоологч",
+                newsSubtitle: "Өндөр нөлөөлөлтэй мэдээллүүдийн тоологч real-time явагдана",
+                searchNews: "Мэдээ хайх...",
+                refreshNews: "AI Судалгаагаар Шинэчлэх",
+                addCustom: "+ Шинэ Мэдээ Нэмэх",
+                impact: "Нөлөөлөл",
+                actual: "Бодит",
+                forecast: "Таамаглал",
+                previous: "Өмнөх",
+                released: "НИЙТЛЭГДСЭН",
+                dangerTitle: "ӨНДӨР ХӨДӨЛГӨӨНТЭЙ ЭРСДЭЛТЭЙ ЗОН",
+                dangerBody: "Өндөр нөлөөтэй мэдээ гарахад 30 хүрэхгүй минут үлдлээ! Арилжааны эрсдэл өндөр байна.",
+                open: "НЭЭЛТТЭЙ",
+                closed: "ХААЛТТАЙ",
+                lunch: "ЦАЙНЫ ЦАГ",
+                closesIn: "Хаагдахад",
+                opensIn: "Нээгдэхэд",
+                lunchEndsIn: "Цайны цаг дуусахад",
+                progress: "Явц",
+                noEvents: "Таны сонгосон шүүлтүүрт тохирох мэдээ олдсонгүй.",
+                currency: "Валют",
+                category: "Ангилал",
+                timeUtc: "Цаг (UTC)",
+                date: "Огноо",
+                eventName: "Мэдээний нэр",
+                cancel: "Цуцлах",
+                saveEvent: "Хадгалах",
+                seoulName: "Сөүлийн Сэшн",
+                tokyoName: "Токиогийн Сэшн",
+                londonName: "Лондоны Сэшн",
+                nyName: "Нью-Йоркийн Сэшн",
+                sydneyName: "Сиднейн Сэшн",
+                aiSearching: "AI мэдээний сан руу холбогдож байна...",
+                aiSuccess: "Эдийн засгийн календарь AI судалгаагаар шинэчлэгдлээ!",
+                audioOn: "Дуу АСААЛТТАЙ",
+                muted: "ДууГҮЙ"
+            }
+        };
+
+        // 5 World Market Sessions Configuration
+        const SESSIONS = [
+            {
+                id: 'sydney',
+                nameKey: 'sydneyName',
+                name: 'Sydney Session',
+                code: 'ASX',
+                city: 'Sydney (ASX)',
+                flag: '🇦🇺',
+                timeZone: 'AEST (UTC+10)',
+                openUtcSec: 22 * 3600,        // 22:00 UTC
+                closeUtcSec: 7 * 3600,         // 07:00 UTC
+                lunchStartUtcSec: 2 * 3600,   // 02:00 UTC (12:00 AEST)
+                lunchEndUtcSec: 4 * 3600,     // 04:00 UTC (14:00 AEST)
+                color: 'from-emerald-500 to-teal-600',
+                badgeBg: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30',
+                borderColor: 'border-emerald-500/30'
+            },
+            {
+                id: 'tokyo',
+                nameKey: 'tokyoName',
+                name: 'Tokyo Session',
+                code: 'TSE',
+                city: 'Tokyo (TSE)',
+                flag: '🇯🇵',
+                timeZone: 'JST (UTC+9)',
+                openUtcSec: 0,                 // 00:00 UTC (09:00 JST)
+                closeUtcSec: 6 * 3600,         // 06:00 UTC (15:00 JST)
+                lunchStartUtcSec: 2.5 * 3600,  // 02:30 UTC (11:30 JST Official TSE Lunch)
+                lunchEndUtcSec: 3.5 * 3600,    // 03:30 UTC (12:30 JST)
+                color: 'from-purple-500 to-indigo-600',
+                badgeBg: 'bg-purple-500/10 text-purple-400 border-purple-500/30',
+                borderColor: 'border-purple-500/30'
+            },
+            {
+                id: 'seoul',
+                nameKey: 'seoulName',
+                name: 'Seoul Session',
+                code: 'KRX',
+                city: 'Seoul (KRX)',
+                flag: '🇰🇷',
+                timeZone: 'KST (UTC+9)',
+                openUtcSec: 0,                // 00:00 UTC (09:00 KST)
+                closeUtcSec: 6.5 * 3600,      // 06:30 UTC (15:30 KST)
+                lunchStartUtcSec: 2.5 * 3600, // 02:30 UTC (11:30 KST)
+                lunchEndUtcSec: 3.5 * 3600,   // 03:30 UTC (12:30 KST)
+                color: 'from-rose-500 to-red-600',
+                badgeBg: 'bg-rose-500/10 text-rose-400 border-rose-500/30',
+                borderColor: 'border-rose-500/30'
+            },
+            {
+                id: 'london',
+                nameKey: 'londonName',
+                name: 'London Session',
+                code: 'LSE',
+                city: 'London (LSE)',
+                flag: '🇬🇧',
+                timeZone: 'BST/GMT (UTC+1)',
+                openUtcSec: 7 * 3600,         // 07:00 UTC (08:00 BST)
+                closeUtcSec: 15.5 * 3600,     // 15:30 UTC (16:30 BST)
+                lunchStartUtcSec: 12 * 3600,  // 12:00 UTC (Midday Lull)
+                lunchEndUtcSec: 13 * 3600,    // 13:00 UTC
+                color: 'from-blue-500 to-cyan-600',
+                badgeBg: 'bg-blue-500/10 text-blue-400 border-blue-500/30',
+                borderColor: 'border-blue-500/30'
+            },
+            {
+                id: 'newyork',
+                nameKey: 'nyName',
+                name: 'New York Session',
+                code: 'NYSE',
+                city: 'New York (NYSE)',
+                flag: '🇺🇸',
+                timeZone: 'EDT (UTC-4)',
+                openUtcSec: 13.5 * 3600,      // 13:30 UTC (09:30 EDT)
+                closeUtcSec: 20 * 3600,       // 20:00 UTC (16:00 EDT)
+                lunchStartUtcSec: 17 * 3600,  // 17:00 UTC (13:00 EDT Wall St Lunch)
+                lunchEndUtcSec: 18 * 3600,    // 18:00 UTC (14:00 EDT)
+                color: 'from-amber-500 to-orange-600',
+                badgeBg: 'bg-amber-500/10 text-amber-400 border-amber-500/30',
+                borderColor: 'border-amber-500/30'
+            }
+        ];
+
+
+        // SVG Icon Components to prevent external dependencies
+        const IconClock = ({ className = "w-5 h-5" }) => (
+            <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+        );
+
+        const IconGlobe = ({ className = "w-5 h-5" }) => (
+            <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+            </svg>
+        );
+
+        const IconActivity = ({ className = "w-5 h-5" }) => (
+            <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+        );
+
+        const IconShieldAlert = ({ className = "w-5 h-5" }) => (
+            <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.618 5.984A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016zM12 9v2m0 4h.01" />
+            </svg>
+        );
+
+        const IconCalendar = ({ className = "w-5 h-5" }) => (
+            <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+        );
+
+        const IconVolume2 = ({ className = "w-5 h-5" }) => (
+            <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+            </svg>
+        );
+
+        const IconVolumeX = ({ className = "w-5 h-5" }) => (
+            <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15zM17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
+            </svg>
+        );
+
+        const IconPlay = ({ className = "w-5 h-5" }) => (
+            <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+        );
+
+        const IconPause = ({ className = "w-5 h-5" }) => (
+            <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+        );
+
+        const IconRotateCcw = ({ className = "w-5 h-5" }) => (
+            <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+        );
+
+        const IconSearch = ({ className = "w-5 h-5" }) => (
+            <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+        );
+
+        const IconRefreshCw = ({ className = "w-5 h-5" }) => (
+            <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+        );
+
+        const IconPlus = ({ className = "w-5 h-5" }) => (
+            <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+        );
+
+        const IconAlertTriangle = ({ className = "w-5 h-5" }) => (
+            <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+        );
+
+        const IconLanguages = ({ className = "w-5 h-5" }) => (
+            <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+            </svg>
+        );
+
+
+        // Web Audio Synthesizer Beep
+        const playBeep = (freq = 880, type = 'sine', duration = 0.2) => {
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (!AudioCtx) return;
+                const ctx = new AudioCtx();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, ctx.currentTime);
+                gain.gain.setValueAtTime(0.15, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+
+                osc.start();
+                osc.stop(ctx.currentTime + duration);
+            } catch (e) {
+                console.log("Audio play suppressed");
+            }
+        };
+
+        // Format seconds to HH:MM:SS
+        const formatSeconds = (totalSec) => {
+            if (isNaN(totalSec) || totalSec < 0) return "00:00:00";
+            const h = Math.floor(totalSec / 3600);
+            const m = Math.floor((totalSec % 3600) / 60);
+            const s = Math.floor(totalSec % 60);
+            return [h, m, s].map(v => String(v).padStart(2, '0')).join(':');
+        };
+
+        const getNextSessionOpenDate = (session, now) => {
+            const date = new Date(now);
+            const day = date.getUTCDay();
+            const targetDay = (session.id === 'sydney') ? 0 : 1; // Sydney opens Sun 22:00 UTC, others Mon
+            let daysToAdd = (targetDay - day + 7) % 7;
+            const openHour = Math.floor(session.openUtcSec / 3600);
+            const openMin = Math.floor((session.openUtcSec % 3600) / 60);
+            const openTimeToday = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), openHour, openMin, 0));
+            
+            if (daysToAdd === 0 && now >= openTimeToday) {
+                daysToAdd = 7;
+            }
+            
+            return new Date(Date.UTC(
+                date.getUTCFullYear(),
+                date.getUTCMonth(),
+                date.getUTCDate() + daysToAdd,
+                openHour,
+                openMin,
+                0
+            ));
+        };
+
+        // Calculate Market Session Status (with Weekend Guard)
+        const getSessionStatus = (session, utcSeconds, isWeekend = false, now = new Date()) => {
+            if (isWeekend) {
+                const targetOpen = getNextSessionOpenDate(session, now);
+                const openRemaining = Math.max(0, Math.floor((targetOpen.getTime() - now.getTime()) / 1000));
+                return {
+                    isOpen: false,
+                    isLunch: false,
+                    openRemaining,
+                    closeRemaining: 0,
+                    lunchEndRemaining: 0,
+                    progress: 0
+                };
+            }
+
+            let isOpen = false;
+            let isLunch = false;
+            let openRemaining = 0;
+            let closeRemaining = 0;
+            let lunchEndRemaining = 0;
+            let progress = 0;
+
+            const { openUtcSec, closeUtcSec, lunchStartUtcSec, lunchEndUtcSec } = session;
+
+            // Session crossing midnight vs same day
+            if (openUtcSec < closeUtcSec) {
+                isOpen = utcSeconds >= openUtcSec && utcSeconds < closeUtcSec;
+                if (isOpen) {
+                    closeRemaining = closeUtcSec - utcSeconds;
+                    const duration = closeUtcSec - openUtcSec;
+                    progress = Math.min(100, Math.max(0, ((utcSeconds - openUtcSec) / duration) * 100));
+
+                    if (lunchStartUtcSec && lunchEndUtcSec && utcSeconds >= lunchStartUtcSec && utcSeconds < lunchEndUtcSec) {
+                        isLunch = true;
+                        lunchEndRemaining = lunchEndUtcSec - utcSeconds;
+                    }
+                } else {
+                    if (utcSeconds < openUtcSec) {
+                        openRemaining = openUtcSec - utcSeconds;
+                    } else {
+                        openRemaining = (86400 - utcSeconds) + openUtcSec;
+                    }
+                }
+            } else {
+                // Crosses midnight (e.g., Sydney 22:00 to 07:00 UTC)
+                isOpen = utcSeconds >= openUtcSec || utcSeconds < closeUtcSec;
+                if (isOpen) {
+                    if (utcSeconds >= openUtcSec) {
+                        closeRemaining = (86400 - utcSeconds) + closeUtcSec;
+                        const duration = (86400 - openUtcSec) + closeUtcSec;
+                        progress = Math.min(100, Math.max(0, ((utcSeconds - openUtcSec) / duration) * 100));
+                    } else {
+                        closeRemaining = closeUtcSec - utcSeconds;
+                        const duration = (86400 - openUtcSec) + closeUtcSec;
+                        progress = Math.min(100, Math.max(0, (((86400 - openUtcSec) + utcSeconds) / duration) * 100));
+                    }
+
+                    if (lunchStartUtcSec && lunchEndUtcSec && utcSeconds >= lunchStartUtcSec && utcSeconds < lunchEndUtcSec) {
+                        isLunch = true;
+                        lunchEndRemaining = lunchEndUtcSec - utcSeconds;
+                    }
+                } else {
+                    openRemaining = openUtcSec - utcSeconds;
+                }
+            }
+
+            return { isOpen, isLunch, openRemaining, closeRemaining, lunchEndRemaining, progress };
+        };
+
+
+        const App = () => {
+            const [now, setNow] = React.useState(new Date());
+            const [activeTab, setActiveTab] = React.useState('all');
+            const [soundEnabled, setSoundEnabled] = React.useState(true);
+            const [selectedCurrency, setSelectedCurrency] = React.useState('ALL');
+            const [selectedImpact, setSelectedImpact] = React.useState('ALL');
+            const [searchQuery, setSearchQuery] = React.useState('');
+            const [lang, setLang] = React.useState('en'); // 'en' or 'mn'
+
+            // AI Search Loading State
+            const [isSearchingAi, setIsSearchingAi] = React.useState(false);
+            const [aiStatusMsg, setAiStatusMsg] = React.useState('');
+
+            // Trade Stopwatch State
+            const [tradeActive, setTradeActive] = React.useState(false);
+            const [tradeSeconds, setTradeSeconds] = React.useState(0);
+            const [maxHoldMinutes, setMaxHoldMinutes] = React.useState(60);
+
+            // Post-Trade Cooloff Timer
+            const [cooloffSeconds, setCooloffSeconds] = React.useState(0);
+
+            // Custom Event Modal State
+            const [showAddModal, setShowAddModal] = React.useState(false);
+            const [newEvent, setNewEvent] = React.useState({
+                title: '',
+                currency: 'USD',
+                impact: 'HIGH',
+                date: new Date().toISOString().split('T')[0],
+                timeUtc: '13:30',
+                forecast: '-',
+                previous: '-'
+            });
+
+            // Sample Economic Events Feed
+            const [economicEvents, setEconomicEvents] = React.useState([
+                { id: 1, date: '2026-09-11', timeUtc: '12:30', currency: 'USD', title: 'US Core CPI Inflation Rate (MoM)', impact: 'CRITICAL', actual: '0.3%', forecast: '0.3%', previous: '0.2%' },
+                { id: 2, date: '2026-09-16', timeUtc: '18:00', currency: 'USD', title: 'FOMC Federal Funds Rate Decision', impact: 'CRITICAL', actual: '-', forecast: '5.25%', previous: '5.50%' },
+                { id: 3, date: '2026-09-17', timeUtc: '12:30', currency: 'USD', title: 'US Retail Sales (MoM)', impact: 'HIGH', actual: '-', forecast: '0.4%', previous: '0.1%' },
+                { id: 4, date: '2026-09-18', timeUtc: '06:00', currency: 'GBP', title: 'UK Retail Sales (YoY)', impact: 'HIGH', actual: '-', forecast: '1.2%', previous: '0.8%' },
+                { id: 5, date: '2026-09-22', timeUtc: '03:00', currency: 'JPY', title: 'BOJ Monetary Policy Statement & Rate', impact: 'CRITICAL', actual: '-', forecast: '0.25%', previous: '0.25%' },
+                { id: 6, date: '2026-09-24', timeUtc: '01:00', currency: 'KRW', title: 'South Korea PPI (YoY)', impact: 'MEDIUM', actual: '-', forecast: '1.4%', previous: '1.2%' }
+            ]);
+
+            const t = (key) => TRANSLATIONS[lang]?.[key] || key;
+
+            // Timer Tick Loop
+            React.useEffect(() => {
+                const interval = setInterval(() => {
+                    setNow(new Date());
+                }, 1000);
+                return () => clearInterval(interval);
+            }, []);
+
+            // Active Trade Stopwatch Timer
+            React.useEffect(() => {
+                let interval;
+                if (tradeActive) {
+                    interval = setInterval(() => setTradeSeconds(s => s + 1), 1000);
+                }
+                return () => clearInterval(interval);
+            }, [tradeActive]);
+
+            // Cooloff Timer Loop
+            React.useEffect(() => {
+                let interval;
+                if (cooloffSeconds > 0) {
+                    interval = setInterval(() => setCooloffSeconds(s => s - 1), 1000);
+                }
+                return () => clearInterval(interval);
+            }, [cooloffSeconds]);
+
+            // Current Time Utilities
+            const utcHours = now.getUTCHours();
+            const utcMinutes = now.getUTCMinutes();
+            const utcSec = now.getUTCSeconds();
+            const utcSeconds = utcHours * 3600 + utcMinutes * 60 + utcSec;
+            const utcDay = now.getUTCDay(); // 0 = Sun, 6 = Sat
+
+            const formattedDateStr = now.toLocaleDateString(lang === 'mn' ? 'mn-MN' : 'en-US', {
+                weekday: 'short', month: 'short', day: 'numeric', year: 'numeric'
+            });
+            const localTimeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const utcTimeStr = [utcHours, utcMinutes, utcSec].map(v => String(v).padStart(2, '0')).join(':');
+
+            // Weekend Check (Friday 22:00 UTC through Sunday 21:00 UTC)
+            const isWeekend = (utcDay === 6) || (utcDay === 5 && utcHours >= 22) || (utcDay === 0 && utcHours < 21);
+
+            // Audio Warning on 10 seconds before candle close
+            React.useEffect(() => {
+                if (!soundEnabled) return;
+                const candle1mSec = 60 - utcSec;
+                if (candle1mSec === 10) {
+                    playBeep(880, 'sine', 0.2);
+                }
+            }, [utcSec, soundEnabled]);
+
+            // Compute Candle Timeframes
+            const getCandleRemaining = (minutePeriod) => {
+                const totalMinutesInDay = utcHours * 60 + utcMinutes;
+                const currentPeriodStart = Math.floor(totalMinutesInDay / minutePeriod) * minutePeriod;
+                const nextPeriodStart = currentPeriodStart + minutePeriod;
+                const minutesLeft = nextPeriodStart - totalMinutesInDay - 1;
+                const secondsLeft = 60 - utcSec;
+                const totalRemainingSec = minutesLeft * 60 + secondsLeft;
+                const progress = ((minutePeriod * 60 - totalRemainingSec) / (minutePeriod * 60)) * 100;
+                return { totalRemainingSec, progress };
+            };
+
+            const CANDLE_TF = [
+                { id: '1m', label: '1 Minute (M1)', period: 1 },
+                { id: '3m', label: '3 Minutes (M3)', period: 3 },
+                { id: '5m', label: '5 Minutes (M5)', period: 5 },
+                { id: '15m', label: '15 Minutes (M15)', period: 15 },
+                { id: '30m', label: '30 Minutes (M30)', period: 30 },
+                { id: '1h', label: '1 Hour (H1)', period: 60 },
+                { id: '4h', label: '4 Hours (H4)', period: 240 },
+                { id: '1d', label: '1 Day (D1)', period: 1440 },
+            ];
+
+            // Calculate Event Countdown math
+            const getEventCountdown = (event) => {
+                try {
+                    const eventDateTime = new Date(`${event.date}T${event.timeUtc}:00Z`);
+                    const diffSec = Math.floor((eventDateTime.getTime() - now.getTime()) / 1000);
+                    return { diffSec, isPast: diffSec < 0 };
+                } catch (e) {
+                    return { diffSec: 0, isPast: true };
+                }
+            };
+
+            // High Volatility Pre-News Check (within 30m)
+            const upcomingDangerEvent = economicEvents.find(e => {
+                const { diffSec, isPast } = getEventCountdown(e);
+                return !isPast && diffSec <= 1800 && (e.impact === 'HIGH' || e.impact === 'CRITICAL');
+            });
+
+            // Filter News Events
+            const filteredEvents = economicEvents.filter(e => {
+                const matchCurr = selectedCurrency === 'ALL' || e.currency === selectedCurrency;
+                const matchImpact = selectedImpact === 'ALL' || e.impact === selectedImpact;
+                const matchSearch = searchQuery === '' || e.title.toLowerCase().includes(searchQuery.toLowerCase()) || e.currency.toLowerCase().includes(searchQuery.toLowerCase());
+                return matchCurr && matchImpact && matchSearch;
+            });
+
+            // Gemini AI Search Refresh Function
+            const handleRefreshViaGemini = async () => {
+                setIsSearchingAi(true);
+                setAiStatusMsg(t('aiSearching'));
+                try {
+                    const userQuery = "List the top 6 real-world high-impact economic releases scheduled for this week (FOMC, CPI, NFP, GDP, Central Bank Interest Rates for USD, EUR, GBP, JPY, KRW) formatted cleanly.";
+                    const apiKey = ""; // Canvas runtime environment automatically inserts API key when empty
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: userQuery }] }],
+                            tools: [{ "google_search": {} }]
+                        })
+                    });
+
+                    if (response.ok) {
+                        setAiStatusMsg(t('aiSuccess'));
+                    } else {
+                        setAiStatusMsg("Search completed with default feed.");
+                    }
+                } catch (err) {
+                    setAiStatusMsg("Network error - showing cached events.");
+                } finally {
+                    setTimeout(() => {
+                        setIsSearchingAi(false);
+                        setAiStatusMsg('');
+                    }, 3000);
+                }
+            };
+
+            // Custom Event Form Submission
+            const handleSaveCustomEvent = (e) => {
+                e.preventDefault();
+                if (!newEvent.title) return;
+                const created = {
+                    id: Date.now(),
+                    date: newEvent.date,
+                    timeUtc: newEvent.timeUtc,
+                    currency: newEvent.currency,
+                    title: newEvent.title,
+                    impact: newEvent.impact,
+                    actual: '-',
+                    forecast: newEvent.forecast || '-',
+                    previous: newEvent.previous || '-'
+                };
+                setEconomicEvents([created, ...economicEvents]);
+                setShowAddModal(false);
+                setNewEvent({ title: '', currency: 'USD', impact: 'HIGH', date: new Date().toISOString().split('T')[0], timeUtc: '13:30', forecast: '-', previous: '-' });
+            };
+
+
+            return (
+                <div className="min-h-screen bg-slate-950 text-slate-100 font-sans p-3 sm:p-6 pb-20 selection:bg-emerald-500 selection:text-slate-950">
+                    <div className="max-w-7xl mx-auto space-y-6">
+
+                        {/* Top App Header */}
+                        <header className="bg-slate-900/80 border border-slate-800 backdrop-blur-md rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row items-center justify-between gap-4 shadow-xl">
+                            <div className="flex items-center space-x-3 w-full md:w-auto justify-between md:justify-start">
+                                <div className="flex items-center space-x-3">
+                                    <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                                        <IconClock className="w-6 h-6 text-slate-950 stroke-[2.5]" />
+                                    </div>
+                                    <div>
+                                        <h1 className="text-xl font-black tracking-tight bg-gradient-to-r from-slate-100 via-slate-200 to-slate-400 bg-clip-text text-transparent">
+                                            {t('appTitle')}
+                                        </h1>
+                                        <p className="text-xs text-slate-400 font-medium">
+                                            {t('subtitle')}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {/* Mobile Audio & Language Controls */}
+                                <div className="flex md:hidden items-center gap-2">
+                                    <button
+                                        onClick={() => setLang(lang === 'en' ? 'mn' : 'en')}
+                                        className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs font-bold text-slate-200 transition flex items-center gap-1.5"
+                                    >
+                                        <IconLanguages className="w-3.5 h-3.5 text-emerald-400" />
+                                        <span>{lang === 'en' ? '🇲🇳 MN' : '🇬🇧 EN'}</span>
+                                    </button>
+                                    <button 
+                                        onClick={() => setSoundEnabled(!soundEnabled)}
+                                        className={`p-2 rounded-xl border transition ${
+                                            soundEnabled 
+                                                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' 
+                                                : 'bg-slate-800 border-slate-700 text-slate-500'
+                                        }`}
+                                    >
+                                        {soundEnabled ? <IconVolume2 className="w-4 h-4" /> : <IconVolumeX className="w-4 h-4" />}
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Center Clocks & Date Display */}
+                            <div className="flex items-center space-x-3 bg-slate-950/70 border border-slate-800/80 px-4 py-2 rounded-xl text-xs font-mono">
+                                <div className="text-center border-r border-slate-800 pr-3">
+                                    <div className="text-slate-400 text-[10px] tracking-wider uppercase flex items-center gap-1 justify-center">
+                                        <IconCalendar className="w-3 h-3 text-emerald-400" />
+                                        {formattedDateStr}
+                                    </div>
+                                    <div className="text-slate-200 font-bold mt-0.5">{localTimeStr}</div>
+                                </div>
+
+                                <div className="text-center pr-3 border-r border-slate-800">
+                                    <div className="text-slate-400 text-[10px] tracking-wider uppercase">{t('utcRef')}</div>
+                                    <div className="text-emerald-400 font-bold mt-0.5">{utcTimeStr} UTC</div>
+                                </div>
+
+                                <div className="text-center">
+                                    <div className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
+                                        isWeekend 
+                                            ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' 
+                                            : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                                    }`}>
+                                        {isWeekend ? `🌴 ${t('weekend')}` : `💼 ${t('weekday')}`}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Desktop Controls (Language Switcher & Sound Toggle) */}
+                            <div className="hidden md:flex items-center space-x-3">
+                                <button
+                                    onClick={() => setLang(lang === 'en' ? 'mn' : 'en')}
+                                    className="flex items-center gap-2 px-3 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs font-bold text-slate-200 transition shadow-sm"
+                                    title="Switch Language / Хэл солих"
+                                >
+                                    <IconLanguages className="w-4 h-4 text-emerald-400" />
+                                    <span>{lang === 'en' ? '🇬🇧 English' : '🇲🇳 Монгол'}</span>
+                                    <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded text-[10px] ml-1">
+                                        {lang === 'en' ? '🇲🇳 MN' : '🇬🇧 EN'}
+                                    </span>
+                                </button>
+
+                                <button 
+                                    onClick={() => setSoundEnabled(!soundEnabled)}
+                                    className={`px-3 py-2 rounded-xl border flex items-center space-x-2 text-xs font-semibold transition ${
+                                        soundEnabled 
+                                            ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20' 
+                                            : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-slate-200'
+                                    }`}
+                                >
+                                    {soundEnabled ? <IconVolume2 className="w-4 h-4" /> : <IconVolumeX className="w-4 h-4" />}
+                                    <span>{soundEnabled ? t('audioOn') : t('muted')}</span>
+                                </button>
+                            </div>
+                        </header>
+
+                        {/* Weekend Market Notice Banner */}
+                        {isWeekend && (
+                            <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 flex items-center space-x-3 text-amber-400 text-xs shadow-lg">
+                                <IconAlertTriangle className="w-6 h-6 flex-shrink-0 animate-bounce text-amber-400" />
+                                <div>
+                                    <h4 className="font-bold uppercase tracking-wider">{t('weekendAlertTitle')}</h4>
+                                    <p className="text-amber-300/80 mt-0.5">{t('weekendAlertBody')}</p>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Navigation Tabs */}
+                        <div className="flex items-center space-x-2 overflow-x-auto pb-1 scrollbar-none">
+                            {[
+                                { id: 'all', label: t('tabAll'), icon: IconClock },
+                                { id: 'sessions', label: t('tabSessions'), icon: IconGlobe },
+                                { id: 'candles', label: t('tabCandles'), icon: IconActivity },
+                                { id: 'discipline', label: t('tabDiscipline'), icon: IconShieldAlert },
+                                { id: 'news', label: t('tabNews'), icon: IconCalendar },
+                            ].map(tab => {
+                                const Icon = tab.icon;
+                                return (
+                                    <button
+                                        key={tab.id}
+                                        onClick={() => setActiveTab(tab.id)}
+                                        className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+                                            activeTab === tab.id
+                                                ? 'bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/20'
+                                                : 'bg-slate-900/60 text-slate-400 hover:text-slate-200 border border-slate-800/60'
+                                        }`}
+                                    >
+                                        <Icon className="w-4 h-4" />
+                                        <span>{tab.label}</span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+
+                        {/* Market Sessions Section */}
+                        {(activeTab === 'all' || activeTab === 'sessions') && (
+                            <section className="space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <h2 className="text-sm font-bold tracking-wider text-slate-300 uppercase flex items-center gap-2">
+                                        <IconGlobe className="w-4 h-4 text-emerald-400" />
+                                        {t('sessionsTitle')}
+                                    </h2>
+                                    <span className="text-xs text-slate-400 font-mono">{t('utcRef')}</span>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+                                    {SESSIONS.map(session => {
+                                        const status = getSessionStatus(session, utcSeconds, isWeekend, now);
+                                        const sessionName = t(session.nameKey) || session.name;
+                                        return (
+                                            <div 
+                                                key={session.id}
+                                                className={`bg-slate-900/80 border ${session.borderColor} rounded-2xl p-4 flex flex-col justify-between space-y-4 relative overflow-hidden backdrop-blur-md shadow-lg`}
+                                            >
+                                                <div className="flex items-start justify-between">
+                                                    <div>
+                                                        <div className="flex items-center space-x-2">
+                                                            <span className="text-xl">{session.flag}</span>
+                                                            <h3 className="font-bold text-slate-100 text-sm">{sessionName}</h3>
+                                                        </div>
+                                                        <p className="text-[11px] text-slate-400 font-mono mt-0.5">{session.city}</p>
+                                                    </div>
+
+                                                    <span className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full border ${
+                                                        status.isLunch
+                                                            ? 'bg-amber-500/20 text-amber-400 border-amber-500/40 animate-pulse'
+                                                            : status.isOpen 
+                                                            ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40 animate-pulse' 
+                                                            : 'bg-slate-800 text-slate-400 border-slate-700'
+                                                    }`}>
+                                                        {status.isLunch ? `🍱 ${t('lunch')}` : status.isOpen ? `● ${t('open')}` : `○ ${t('closed')}`}
+                                                    </span>
+                                                </div>
+
+                                                <div className="bg-slate-950/60 rounded-xl p-3 border border-slate-800/80 text-center">
+                                                    <span className="text-[10px] text-slate-400 font-mono uppercase tracking-wider block">
+                                                        {status.isLunch ? t('lunchEndsIn') : status.isOpen ? t('closesIn') : t('opensIn')}
+                                                    </span>
+                                                    <div className="text-lg font-black font-mono text-slate-100 mt-0.5">
+                                                        {status.isLunch 
+                                                            ? formatSeconds(status.lunchEndRemaining)
+                                                            : status.isOpen 
+                                                            ? formatSeconds(status.closeRemaining) 
+                                                            : formatSeconds(status.openRemaining)
+                                                        }
+                                                    </div>
+                                                </div>
+
+                                                <div className="space-y-1.5">
+                                                    <div className="flex justify-between text-[10px] text-slate-400 font-mono">
+                                                        <span>{t('progress')}</span>
+                                                        <span>{status.progress.toFixed(0)}%</span>
+                                                    </div>
+                                                    <div className="h-2 w-full bg-slate-950 rounded-full overflow-hidden p-0.5 border border-slate-800 relative">
+                                                        <div 
+                                                            className={`h-full rounded-full transition-all duration-1000 bg-gradient-to-r ${session.color}`}
+                                                            style={{ width: `${status.progress}%` }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </section>
+                        )}
+
+
+                        {/* Candle Timers Section */}
+                        {(activeTab === 'all' || activeTab === 'candles') && (
+                            <section className="space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <h2 className="text-sm font-bold tracking-wider text-slate-300 uppercase flex items-center gap-2">
+                                        <IconActivity className="w-4 h-4 text-emerald-400" />
+                                        {t('candleTitle')}
+                                    </h2>
+                                    <span className="text-xs text-slate-400 font-mono">{t('audioSubtitle')}</span>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                    {CANDLE_TF.map(tf => {
+                                        const { totalRemainingSec, progress } = getCandleRemaining(tf.period);
+                                        const isWarning = totalRemainingSec <= 10;
+
+                                        return (
+                                            <div 
+                                                key={tf.id}
+                                                className={`bg-slate-900/80 border rounded-2xl p-4 space-y-3 transition-all ${
+                                                    isWarning 
+                                                        ? 'border-amber-500/60 shadow-lg shadow-amber-500/10 bg-amber-500/5' 
+                                                        : 'border-slate-800'
+                                                }`}
+                                            >
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-xs font-bold text-slate-300 font-mono">{tf.label}</span>
+                                                    {isWarning && (
+                                                        <span className="text-[10px] font-bold text-amber-400 bg-amber-500/20 border border-amber-500/40 px-2 py-0.5 rounded-full animate-pulse">
+                                                            CLOSING SOON
+                                                        </span>
+                                                    )}
+                                                </div>
+
+                                                <div className="text-2xl font-black font-mono tracking-tight text-center py-1 text-slate-100">
+                                                    {formatSeconds(totalRemainingSec)}
+                                                </div>
+
+                                                <div className="space-y-1">
+                                                    <div className="h-1.5 w-full bg-slate-950 rounded-full overflow-hidden">
+                                                        <div 
+                                                            className={`h-full transition-all duration-1000 ${
+                                                                isWarning ? 'bg-amber-400' : 'bg-emerald-400'
+                                                            }`}
+                                                            style={{ width: `${progress}%` }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </section>
+                        )}
+
+
+                        {/* Discipline Timers Section */}
+                        {(activeTab === 'all' || activeTab === 'discipline') && (
+                            <section className="space-y-4">
+                                <h2 className="text-sm font-bold tracking-wider text-slate-300 uppercase flex items-center gap-2">
+                                    <IconShieldAlert className="w-4 h-4 text-emerald-400" />
+                                    {t('disciplineTitle')}
+                                </h2>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {/* Active Trade Duration Stopwatch */}
+                                    <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 space-y-4 shadow-xl">
+                                        <div className="flex justify-between items-center">
+                                            <div>
+                                                <h3 className="font-bold text-slate-100 text-sm">{t('activeTrade')}</h3>
+                                                <p className="text-xs text-slate-400">{t('targetHolding')}: {maxHoldMinutes}m</p>
+                                            </div>
+                                            <div className="flex items-center space-x-2">
+                                                <select 
+                                                    value={maxHoldMinutes} 
+                                                    onChange={e => setMaxHoldMinutes(Number(e.target.value))}
+                                                    className="bg-slate-950 border border-slate-800 text-slate-300 text-xs rounded-xl px-2.5 py-1 focus:outline-none"
+                                                >
+                                                    <option value={15}>15 min</option>
+                                                    <option value={30}>30 min</option>
+                                                    <option value={60}>1 hour</option>
+                                                    <option value={120}>2 hours</option>
+                                                    <option value={240}>4 hours</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div className="text-4xl font-black font-mono text-center py-2 tracking-tight text-emerald-400 bg-slate-950/60 rounded-xl border border-slate-800">
+                                            {formatSeconds(tradeSeconds)}
+                                        </div>
+
+                                        <div className="flex space-x-2">
+                                            {!tradeActive ? (
+                                                <button 
+                                                    onClick={() => setTradeActive(true)}
+                                                    className="flex-1 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-2.5 rounded-xl text-xs flex items-center justify-center space-x-2 transition"
+                                                >
+                                                    <IconPlay className="w-4 h-4" />
+                                                    <span>{t('startTrade')}</span>
+                                                </button>
+                                            ) : (
+                                                <button 
+                                                    onClick={() => setTradeActive(false)}
+                                                    className="flex-1 bg-rose-500 hover:bg-rose-400 text-slate-950 font-bold py-2.5 rounded-xl text-xs flex items-center justify-center space-x-2 transition"
+                                                >
+                                                    <IconPause className="w-4 h-4" />
+                                                    <span>{t('stopTrade')}</span>
+                                                </button>
+                                            )}
+                                            <button 
+                                                onClick={() => { setTradeActive(false); setTradeSeconds(0); }}
+                                                className="px-4 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2.5 rounded-xl text-xs transition"
+                                            >
+                                                <IconRotateCcw className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Post-Trade Cooloff Timer */}
+                                    <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 space-y-4 shadow-xl">
+                                        <div>
+                                            <h3 className="font-bold text-slate-100 text-sm">{t('cooloffTitle')}</h3>
+                                            <p className="text-xs text-slate-400">{t('cooloffSubtitle')}</p>
+                                        </div>
+
+                                        <div className={`text-4xl font-black font-mono text-center py-2 tracking-tight rounded-xl border transition ${
+                                            cooloffSeconds > 0 
+                                                ? 'text-amber-400 bg-amber-500/10 border-amber-500/30 animate-pulse' 
+                                                : 'text-slate-400 bg-slate-950/60 border-slate-800'
+                                        }`}>
+                                            {formatSeconds(cooloffSeconds)}
+                                        </div>
+
+                                        <div className="flex space-x-2">
+                                            <button 
+                                                onClick={() => setCooloffSeconds(15 * 60)}
+                                                className="flex-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-2.5 rounded-xl text-xs flex items-center justify-center space-x-2 transition"
+                                            >
+                                                <IconShieldAlert className="w-4 h-4" />
+                                                <span>{t('startCooloff')}</span>
+                                            </button>
+                                            <button 
+                                                onClick={() => setCooloffSeconds(0)}
+                                                className="px-4 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2.5 rounded-xl text-xs transition"
+                                            >
+                                                {t('reset')}
+                                            </button>
+                                        </div>
+
+                                        {cooloffSeconds > 0 ? (
+                                            <p className="text-[11px] text-amber-400 font-bold text-center tracking-wider uppercase">
+                                                ⛔ {t('cooloffActive')}
+                                            </p>
+                                        ) : (
+                                            <p className="text-[11px] text-emerald-400 font-bold text-center tracking-wider uppercase">
+                                                ✅ {t('cooloffReady')}
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+                            </section>
+                        )}
+
+
+                        {/* Economic News Section */}
+                        {(activeTab === 'all' || activeTab === 'news') && (
+                            <section className="space-y-4">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                    <div>
+                                        <h2 className="text-sm font-bold tracking-wider text-slate-300 uppercase flex items-center gap-2">
+                                            <IconCalendar className="w-4 h-4 text-emerald-400" />
+                                            {t('newsTitle')}
+                                        </h2>
+                                        <p className="text-xs text-slate-400">{t('newsSubtitle')}</p>
+                                    </div>
+
+                                    <div className="flex items-center space-x-2">
+                                        <button 
+                                            onClick={handleRefreshViaGemini}
+                                            disabled={isSearchingAi}
+                                            className="px-3.5 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold rounded-xl text-xs flex items-center space-x-2 transition shadow-lg shadow-emerald-500/20 disabled:opacity-50"
+                                        >
+                                            <IconRefreshCw className={`w-3.5 h-3.5 ${isSearchingAi ? 'animate-spin' : ''}`} />
+                                            <span>{t('refreshNews')}</span>
+                                        </button>
+                                        <button 
+                                            onClick={() => setShowAddModal(true)}
+                                            className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl text-xs flex items-center space-x-1.5 border border-slate-700 transition"
+                                        >
+                                            <IconPlus className="w-3.5 h-3.5" />
+                                            <span>{t('addCustom')}</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {aiStatusMsg && (
+                                    <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-3 text-xs text-emerald-400 flex items-center space-x-2">
+                                        <IconActivity className="w-4 h-4 animate-spin" />
+                                        <span>{aiStatusMsg}</span>
+                                    </div>
+                                )}
+
+                                {/* High Volatility Alert Warning */}
+                                {upcomingDangerEvent && (
+                                    <div className="bg-rose-500/10 border border-rose-500/30 rounded-2xl p-4 flex items-center space-x-3 text-rose-400 text-xs animate-pulse shadow-lg">
+                                        <IconAlertTriangle className="w-6 h-6 flex-shrink-0" />
+                                        <div>
+                                            <h4 className="font-bold uppercase tracking-wider">{t('dangerTitle')}</h4>
+                                            <p className="text-rose-300/80 mt-0.5">
+                                                {upcomingDangerEvent.title} ({upcomingDangerEvent.currency}) - {t('dangerBody')}
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Filters Bar */}
+                                <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-3 flex flex-wrap items-center justify-between gap-3">
+                                    <div className="flex items-center space-x-2 overflow-x-auto scrollbar-none py-0.5">
+                                        <span className="text-xs text-slate-400 font-medium mr-1">{t('currency')}:</span>
+                                        {['ALL', 'USD', 'EUR', 'GBP', 'JPY', 'AUD', 'KRW', 'MNT'].map(curr => (
+                                            <button
+                                                key={curr}
+                                                onClick={() => setSelectedCurrency(curr)}
+                                                className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition ${
+                                                    selectedCurrency === curr 
+                                                        ? 'bg-emerald-500 text-slate-950' 
+                                                        : 'bg-slate-800/80 text-slate-400 hover:text-slate-200'
+                                                }`}
+                                            >
+                                                {curr === 'ALL' ? 'ALL' : `${getCurrencyFlag(curr)} ${curr}`}
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    <div className="flex items-center space-x-2 w-full sm:w-auto">
+                                        <div className="relative flex-1 sm:w-48">
+                                            <IconSearch className="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-500" />
+                                            <input 
+                                                type="text"
+                                                placeholder={t('searchNews')}
+                                                value={searchQuery}
+                                                onChange={e => setSearchQuery(e.target.value)}
+                                                className="w-full bg-slate-950 border border-slate-800 text-slate-200 text-xs rounded-xl pl-8 pr-3 py-1.5 focus:outline-none focus:border-emerald-500/50"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Economic Events List */}
+                                <div className="bg-slate-900/80 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+                                    <div className="divide-y divide-slate-800/60">
+                                        {filteredEvents.length === 0 ? (
+                                            <div className="p-8 text-center text-xs text-slate-500">
+                                                {t('noEvents')}
+                                            </div>
+                                        ) : (
+                                            filteredEvents.map(event => {
+                                                const { diffSec, isPast } = getEventCountdown(event);
+                                                const flag = getCurrencyFlag(event.currency);
+
+                                                return (
+                                                    <div key={event.id} className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 hover:bg-slate-800/30 transition">
+                                                        <div className="flex items-start space-x-3">
+                                                            <div className="text-2xl pt-0.5">{flag}</div>
+                                                            <div>
+                                                                <div className="flex items-center space-x-2">
+                                                                    <span className="text-xs font-mono font-bold text-slate-300">{event.currency}</span>
+                                                                    <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full border ${
+                                                                        event.impact === 'CRITICAL' ? 'bg-rose-500/20 text-rose-400 border-rose-500/40' :
+                                                                        event.impact === 'HIGH' ? 'bg-amber-500/20 text-amber-400 border-amber-500/40' :
+                                                                        'bg-slate-800 text-slate-400 border-slate-700'
+                                                                    }`}>
+                                                                        {event.impact}
+                                                                    </span>
+                                                                    <span className="text-xs text-slate-400 font-mono">📅 {event.date} • {event.timeUtc} UTC</span>
+                                                                </div>
+                                                                <h4 className="font-bold text-slate-100 text-sm mt-1">{event.title}</h4>
+                                                                <div className="flex items-center space-x-4 text-xs font-mono text-slate-400 mt-1">
+                                                                    <span>{t('actual')}: <strong className="text-emerald-400">{event.actual || '-'}</strong></span>
+                                                                    <span>{t('forecast')}: <strong className="text-slate-300">{event.forecast}</strong></span>
+                                                                    <span>{t('previous')}: <strong className="text-slate-400">{event.previous}</strong></span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="flex items-center justify-end">
+                                                            {isPast ? (
+                                                                <span className="text-xs font-mono font-bold text-slate-500 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800">
+                                                                    ✅ {t('released')}
+                                                                </span>
+                                                            ) : (
+                                                                <div className="text-right bg-slate-950/80 px-4 py-2 rounded-xl border border-slate-800">
+                                                                    <span className="text-[10px] text-slate-400 font-mono block uppercase">COUNTDOWN</span>
+                                                                    <span className="text-sm font-black font-mono text-emerald-400">
+                                                                        {formatSeconds(diffSec)}
+                                                                    </span>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })
+                                        )}
+                                    </div>
+                                </div>
+                            </section>
+                        )}
+
+                        {/* Custom Event Modal */}
+                        {showAddModal && (
+                            <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+                                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-md w-full space-y-4 shadow-2xl">
+                                    <h3 className="font-bold text-slate-100 text-base">{t('addCustom')}</h3>
+                                    <form onSubmit={handleSaveCustomEvent} className="space-y-3 text-xs">
+                                        <div>
+                                            <label className="text-slate-400 block mb-1">{t('eventName')}</label>
+                                            <input 
+                                                type="text" 
+                                                required
+                                                value={newEvent.title} 
+                                                onChange={e => setNewEvent({...newEvent, title: e.target.value})}
+                                                className="w-full bg-slate-950 border border-slate-800 text-slate-200 rounded-xl px-3 py-2 focus:outline-none"
+                                            />
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label className="text-slate-400 block mb-1">{t('currency')}</label>
+                                                <select 
+                                                    value={newEvent.currency} 
+                                                    onChange={e => setNewEvent({...newEvent, currency: e.target.value})}
+                                                    className="w-full bg-slate-950 border border-slate-800 text-slate-200 rounded-xl px-3 py-2 focus:outline-none"
+                                                >
+                                                    {['USD', 'EUR', 'GBP', 'JPY', 'AUD', 'CAD', 'CHF', 'NZD', 'KRW', 'MNT'].map(c => (
+                                                        <option key={c} value={c}>{c}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="text-slate-400 block mb-1">{t('impact')}</label>
+                                                <select 
+                                                    value={newEvent.impact} 
+                                                    onChange={e => setNewEvent({...newEvent, impact: e.target.value})}
+                                                    className="w-full bg-slate-950 border border-slate-800 text-slate-200 rounded-xl px-3 py-2 focus:outline-none"
+                                                >
+                                                    <option value="CRITICAL">CRITICAL</option>
+                                                    <option value="HIGH">HIGH</option>
+                                                    <option value="MEDIUM">MEDIUM</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label className="text-slate-400 block mb-1">{t('date')}</label>
+                                                <input 
+                                                    type="date" 
+                                                    required
+                                                    value={newEvent.date} 
+                                                    onChange={e => setNewEvent({...newEvent, date: e.target.value})}
+                                                    className="w-full bg-slate-950 border border-slate-800 text-slate-200 rounded-xl px-3 py-2 focus:outline-none"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-slate-400 block mb-1">{t('timeUtc')}</label>
+                                                <input 
+                                                    type="time" 
+                                                    required
+                                                    value={newEvent.timeUtc} 
+                                                    onChange={e => setNewEvent({...newEvent, timeUtc: e.target.value})}
+                                                    className="w-full bg-slate-950 border border-slate-800 text-slate-200 rounded-xl px-3 py-2 focus:outline-none"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label className="text-slate-400 block mb-1">{t('forecast')}</label>
+                                                <input 
+                                                    type="text" 
+                                                    value={newEvent.forecast} 
+                                                    onChange={e => setNewEvent({...newEvent, forecast: e.target.value})}
+                                                    className="w-full bg-slate-950 border border-slate-800 text-slate-200 rounded-xl px-3 py-2 focus:outline-none"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-slate-400 block mb-1">{t('previous')}</label>
+                                                <input 
+                                                    type="text" 
+                                                    value={newEvent.previous} 
+                                                    onChange={e => setNewEvent({...newEvent, previous: e.target.value})}
+                                                    className="w-full bg-slate-950 border border-slate-800 text-slate-200 rounded-xl px-3 py-2 focus:outline-none"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="flex justify-end space-x-2 pt-3">
+                                            <button 
+                                                type="button" 
+                                                onClick={() => setShowAddModal(false)}
+                                                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-bold"
+                                            >
+                                                {t('cancel')}
+                                            </button>
+                                            <button 
+                                                type="submit"
+                                                className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded-xl font-bold"
+                                            >
+                                                {t('saveEvent')}
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        )}
+
+                    </div>
+                </div>
+            );
+        };
+
+        // Render Application to DOM
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
